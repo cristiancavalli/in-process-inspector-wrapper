@@ -4,18 +4,22 @@
   "description": "Javascript frontend for working with in-process V8 inspector",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover node_modules/.bin/_mocha -- --recursive test/**/*"
+    "test": "istanbul cover node_modules/.bin/_mocha -- --recursive test/**/*",
+    "acceptance": "node --inspector-js-bindings test/acceptance/test.js"
   },
   "author": "Google Inc.",
   "license": "Apache-2.0",
   "dependencies": {
     "lodash": "^4.16.6",
     "lodash.every": "^4.6.0",
+    "lodash.find": "^4.6.0",
     "lodash.first": "^3.0.0",
     "lodash.foreach": "^4.5.0",
     "lodash.has": "^4.5.2",
+    "lodash.indexof": "^4.0.5",
     "lodash.isboolean": "^3.0.3",
     "lodash.isempty": "^4.4.0",
+    "lodash.isfunction": "^3.0.8",
     "lodash.isnull": "^3.0.0",
     "lodash.isnumber": "^3.0.3",
     "lodash.isobject": "^3.0.2",

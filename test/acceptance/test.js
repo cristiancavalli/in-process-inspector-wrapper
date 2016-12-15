@@ -16,16 +16,41 @@
 
 'use strict';
 
-function testMe () {
-  return new Promise(function (resolve, reject) {
-      setTimeout(() => resolve({ts: Date.now()}), 2500);
-  });
-};
+const assert = require('assert');
+const resolve = require('path').resolve;
+const first = require('lodash.first');
+const find = require('lodash.find');
+const fixturePath = resolve(__dirname, '../fixtures/promise.js');
+const fixture = require(fixturePath);
+const Client = require('../../lib/InspectorClient/Client');
+const clientInstance = new Client();
 
-setInterval(function () {
-  var j = testMe();
-  j.then(function (dateObj) {
-    console.log('Resolved @ '+dateObj.ts);
-    return;
-  });
-}, 6000);
+function awaitPromiseFromCallSite (properties) {
+  var promiseObject = find(properties, {name: 'x'});
+  assert(promiseObject.value.subtype === 'promise');
+  return clientInstance.awaitPromise(promiseObject.value.objectId)
+    .then((promiseValue) => 
+      console.log('Successfully awaited promise:\n', promiseValue))
+    .catch((err) => console.error(err));
+}
+
+function handleBreakpointHit (currentHit, allHits) {
+  return clientInstance.getPropertiesFromBreakpoint(currentHit)
+    .then((msg) => awaitPromiseFromCallSite(msg.result))
+    .catch((err) => console.error('Got error in retrieving properties:\n',
+      err));
+}
+
+function setBreakpoint (scriptId) {
+  return clientInstance.setBreakpoint(scriptId, 22, 0, handleBreakpointHit);
+}
+
+clientInstance.addReadyListener(() => {
+  const scriptCache = clientInstance.messageInterface().debugger()
+    .parsedScriptCache();
+  scriptCache.getEntryByUrl(fixturePath)
+    .then((msg) => setBreakpoint(msg.params.scriptId))
+    // After the breakpoint is set, invoke the fixture to trigger capture
+    .then(() => fixture())
+    .catch((err) => console.error('Got error:\n', err));
+});
